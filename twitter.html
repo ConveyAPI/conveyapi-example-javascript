@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>ConveyAPI - Simple Example</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+        font-size: 14px;
+        line-height: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="index.html">ConveyAPI</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li class="active"><a href="document.html">Document Example</a></li>
+              <li class="active"><a href="twitter.html">Twitter Example</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <h1>Try it: Analyze Twitter</h1>
+      <p>Below is an example of using ConveyAPI with the Twitter Search API.</p>
+      
+      <form class="well form-horizontal">
+        
+        <div class="control-group">
+          <label class="control-label">API Key:</label>
+          <div class="controls">
+            <input id="apiKey" type="text" class="span4" placeholder="Your ConveyAPI Key...">
+          </div>
+        </div>
+        
+        <div class="control-group">
+          <label class="control-label">Twitter Search:</label>
+          <div class="controls">
+            <input id="terms" type="text" class="span4" placeholder="Search Terms...">
+          </div>
+        </div>
+        
+        <div class="form-actions">
+          <button id="submit" type="button" class="btn btn-primary">Search</button>
+          <button id="clear" class="btn" type="button">Clear</button>
+        </div>
+        
+      </form>
+      
+      <div class="page-header">
+        <div class="pull-right">
+          <span class="badge badge-success">positive <span id="positiveCount"></span></span>&nbsp;
+          <span class="badge badge-warning">neutral <span id="neutralCount"></span></span>&nbsp;
+          <span class="badge badge-important">negative <span id="negativeCount"></span></span>
+        </div>
+        <br/>
+      </div>
+      
+      <div id="tweets"></div>
+      
+      <h2>Source Code</h2>
+      <p>To use ConveyAPI in with jQuery, make sure to use the 'callback' parameter in order to have your response returned as JSONP (JSON with Padding).</p>
+      <pre>
+        
+        var apiUrl = "http://beta.conveyapi.com/analysis-engine/process?callback=?";
+        var searchUrl = "http://search.twitter.com/search.json?callback=?";
+        
+        ...
+        
+        function search(terms) {
+          clear();
+          $.getJSON(searchUrl,
+            { q: terms, rpp: 100, result_type: "recent"},
+            function(jsonData) {
+               $.each(jsonData.results, function(i, tweet){
+                 process(tweet);
+               })
+            });
+        }
+
+        function process(tweet) {
+          $.getJSON(apiUrl,
+            { api_key: $("#apiKey").val(), text: tweet.text},
+            function(jsonData) {
+              
+              var annotations = jsonData.documents[0].annotations;
+
+              ...
+
+            });
+        }
+
+        ...
+        
+      </pre>
+
+    </div> <!-- /container -->
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="js/jquery-1.7.2.min.js"></script>
+    
+    <script>
+    
+    var apiUrl = "http://beta.conveyapi.com/analysis-engine/process?callback=?";
+    var searchUrl = "http://search.twitter.com/search.json?callback=?";
+    
+    var positiveCount = 0;
+    var negativeCount = 0;
+    var neutralCount = 0;
+    var totalCount = 0;
+    
+    $("#submit").click(function () {
+      search($("#terms").val());
+    });
+    
+    $("#clear").click(function () {
+      clear();
+    });
+    
+    function search(terms) {
+      clear();
+      $.getJSON(searchUrl,
+        { q: terms, rpp: 100, result_type: "recent", lang: "en"},
+        function(jsonData) {
+           $.each(jsonData.results, function(i, tweet){
+             process(tweet);
+           })
+        });
+    }
+    
+    function process(tweet) {
+      $.getJSON(apiUrl,
+        { api_key: $("#apiKey").val(), text: tweet.text},
+        function(jsonData) {
+          var annotations = jsonData.documents[0].annotations;
+           
+          var annotationList = $("<dl class='dl-horizontal'/>");
+          appendAnnotation(annotationList, "polarity", annotations.polarity);
+          appendAnnotation(annotationList, "emotion", annotations.emotion);
+          appendAnnotation(annotationList, "intensity", annotations.intensity);
+          
+          $("#tweets").prepend(
+            $("<blockquote/>").append(
+              $("<p/>").html(tweet.text),
+                $("<small/>").append($("<strong/>").text(tweet.from_user_name), " @" + tweet.from_user),
+                  annotationList));
+          
+          updateTotals(annotations.polarity.value);
+          
+        });
+    }
+    
+    function updateTotals(polarity){
+      switch(polarity) {
+        case "positive": 
+          positiveCount++;
+          break;
+        case "neutral": 
+          neutralCount++;
+          break;
+        case "negative": 
+          negativeCount++;
+          break;
+      }
+      totalCount++;
+      $("#positiveCount").text(positiveCount + " (" + (100 * positiveCount / totalCount).toFixed(0) + "%)");
+      $("#neutralCount").text(neutralCount + " (" + (100 * neutralCount / totalCount).toFixed(0) + ")%");
+      $("#negativeCount").text(negativeCount + " (" + (100 * negativeCount / totalCount).toFixed(0) + "%)");
+    }
+    
+    function appendAnnotation(list, name, annotation) {
+      
+      var span = $("<span class='label'/>");
+      
+      switch(annotation.value) {
+        case "positive": 
+          span.addClass("label-success");
+          break;
+        case "neutral": 
+          span.addClass("label-warning");
+          break;
+        case "negative": 
+          span.addClass("label-important");
+          break;
+      }
+      
+      list.append(
+        $("<dt/>").text(name + ":"),
+        $("<dd/>").append(span.text(annotation.value + 
+         " (" + annotation.confidence.toFixed(2) + ")")));
+    }
+    
+    function clear() {
+      positiveCount = 0;
+      negativeCount = 0;
+      neutralCount = 0;
+      totalCount = 0;
+      updateTotals("");
+      $("#tweets").empty();
+    }
+    
+    </script>
+
+  </body>
+</html>

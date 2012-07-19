@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>ConveyAPI - Simple Example</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+        font-size: 14px;
+        line-height: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="index.html">ConveyAPI</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li class="active"><a href="document.html">Document Example</a></li>
+              <li class="active"><a href="twitter.html">Twitter Example</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <h1>Try it: Analyze a Document</h1>
+      <p>Below is a simple example of using the ConveyAPI with jQuery to analyze a document.</p>
+      <form class="well form-horizontal">
+        
+        <div class="control-group">
+          <label class="control-label">API Key:</label>
+          <div class="controls">
+            <input id="apiKey" type="text" class="span4" placeholder="Your ConveyAPI Key...">
+          </div>
+        </div>
+        
+        <div class="control-group">
+          <label class="control-label" for="textarea">Text:</label>
+          <div class="controls">
+            <textarea id="text" class="span4" id="textarea" rows="4"></textarea> <br/>
+          </div> 
+        </div>
+        
+        <div class="form-actions">
+          <button id="submit"type="button" class="btn btn-primary">Analyze</button>
+          <button class="btn" type="button">Clear</button>
+        </div>
+
+      </form>
+
+      <div id="result" style="display: none;">
+        <blockquote>
+          <p id="responseText"></p>
+
+          <dl class='dl-horizontal'>
+            <dt>polarity:</dt>
+            <dd><span id="polarity" class='label'><span></dd>
+            <dt>emotion:</dt>
+            <dd><span id="emotion" class='label'><span></dd>
+            <dt>intensity:</dt>
+            <dd><span id="intensity" class='label'><span></dd>
+            <dt>spam:</dt>
+            <dd><span id="spam" class='label'><span></dd>
+          </dl>
+
+        </blockquote>
+      </div>
+      
+      <h2>Source Code</h2>
+      <p>To use ConveyAPI in with jQuery, make sure to use the 'callback' parameter in order to have your response returned as JSONP (JSON with Padding).</p>
+      <pre>
+        var apiUrl = "http://beta.conveyapi.com/analysis-engine/process?callback=?";
+
+        $("#submit").click(function () {
+          $("#result").slideUp();
+
+          $.getJSON(apiUrl,
+            { api_key: $("#apiKey").val(), text: $("#text").val(), suppress_status_codes: true},
+            function(jsonData) {
+
+              if(jsonData.status.code == 200) {
+          
+                $("#result").slideDown();
+
+                var doc = jsonData.documents[0];
+            
+                $("#polarity").text(doc.annotations.polarity.value + 
+                  " (" + doc.annotations.polarity.confidence.toFixed(2) + ")");
+
+                $("#emotion").text(doc.annotations.emotion.value + 
+                  " (" + doc.annotations.emotion.confidence.toFixed(2) + ")");
+
+                $("#intensity").text(doc.annotations.intensity.value 
+                  + " (" + doc.annotations.intensity.confidence.toFixed(2) + ")");
+                   
+                $("#spam").text(doc.annotations.spam.value
+                  + " (" + doc.annotations.spam.confidence.toFixed(2) + ")");
+
+              } else {
+                alert(jsonData.status.message);
+              }
+            });
+        });
+      </pre>
+
+    </div> <!-- /container -->
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="js/jquery-1.7.2.min.js"></script>
+    
+    <script>
+    
+    var apiUrl = "http://beta.conveyapi.com/analysis-engine/process?callback=?";
+    
+    $("#submit").click(function () {
+      $("#result").slideUp();
+      
+      $.getJSON(apiUrl,
+        { api_key: $("#apiKey").val(), text: $("#text").val(), suppress_status_codes: true},
+        function(jsonData) {
+
+          if(jsonData.status.code == 200) {
+          
+            $("#result").slideDown();
+
+            var doc = jsonData.documents[0];
+
+            $("#responseText").text(doc.text);
+            
+            $("#polarity").text(doc.annotations.polarity.value + " (" + doc.annotations.polarity.confidence.toFixed(2) + ")"); 
+            $("#emotion").text(doc.annotations.emotion.value + " (" + doc.annotations.emotion.confidence.toFixed(2) + ")"); 
+            $("#intensity").text(doc.annotations.intensity.value + " (" + doc.annotations.intensity.confidence.toFixed(2) + ")"); 
+            $("#spam").text(doc.annotations.spam.value + " (" + doc.annotations.spam.confidence.toFixed(2) + ")");
+
+            switch(doc.annotations.polarity.value) {
+              case "positive": 
+                $("#polarity").addClass("label-success");
+                break;
+              case "neutral": 
+                $("#polarity").addClass("label-warning");
+                break;
+              case "negative": 
+                $("#polarity").addClass("label-important");
+                break;
+            } 
+
+          } else {
+            alert(jsonData.status.message);
+          }
+        });
+    });
+    
+    </script>
+
+  </body>
+</html>
