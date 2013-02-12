@@ -90,7 +90,7 @@
           
                 $("#result").slideDown();
 
-                var doc = jsonData.documents[0];
+                var doc = jsonData.document;
             
                 $("#polarity").text(doc.annotations.polarity.value + 
                   " (" + doc.annotations.polarity.confidence.toFixed(2) + ")");
@@ -133,7 +133,7 @@
           
             $("#result").slideDown();
 
-            var doc = jsonData.documents[0];
+            var doc = jsonData.document;
 
             $("#responseText").text(doc.text);
             

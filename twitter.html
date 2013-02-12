@@ -93,7 +93,7 @@
             { api_key: $("#apiKey").val(), text: tweet.text},
             function(jsonData) {
               
-              var annotations = jsonData.documents[0].annotations;
+              var annotations = jsonData.document.annotations;
 
               ...
 
@@ -144,7 +144,7 @@
       $.getJSON(apiUrl,
         { api_key: $("#apiKey").val(), text: tweet.text},
         function(jsonData) {
-          var annotations = jsonData.documents[0].annotations;
+          var annotations = jsonData.document.annotations;
            
           var annotationList = $("<dl class='dl-horizontal'/>");
           appendAnnotation(annotationList, "polarity", annotations.polarity);
